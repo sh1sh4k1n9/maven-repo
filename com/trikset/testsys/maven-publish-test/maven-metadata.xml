@@ -3,10 +3,10 @@
   <groupId>com.trikset.testsys</groupId>
   <artifactId>maven-publish-test</artifactId>
   <versioning>
-    <release>10.4.0.RELEASE</release>
+    <release>11.0.0.RELEASE</release>
     <versions>
-      <version>10.4.0.RELEASE</version>
+      <version>11.0.0.RELEASE</version>
     </versions>
-    <lastUpdated>20250806102321</lastUpdated>
+    <lastUpdated>20250806104340</lastUpdated>
   </versioning>
 </metadata>
