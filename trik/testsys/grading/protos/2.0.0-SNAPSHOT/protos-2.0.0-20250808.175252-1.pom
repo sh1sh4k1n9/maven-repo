@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>trik.testsys.grading</groupId>
+    <artifactId>protos</artifactId>
+    <version>2.0.0-SNAPSHOT</version>
+    
+    <name>TestSys Protos</name>
+    <description>Protos dependencies for gRPC working</description>
+
+    <repositories>
+        <repository>
+            <id>mavenCentral</id>
+            <url>https://repo1.maven.org/maven2/</url>
+        </repository>
+    </repositories>
+
+    <properties>
+        <deploy.repository.name>maven-repo</deploy.repository.name>
+        <deploy.repository.owner>sh1sh4k1n9</deploy.repository.owner>
+        <!--suppress UnresolvedMavenProperty -->
+        <deploy.branch.name>snapshots</deploy.branch.name>
+        <deploy.temporaryArtifactDir>${project.build.outputDirectory}/mvn-artifact</deploy.temporaryArtifactDir>
+
+        <maven.plugin.version>2.22.2</maven.plugin.version>
+        <maven.site-plugin.version>0.12</maven.site-plugin.version>
+        <maven.source-plugin.version>3.1.0</maven.source-plugin.version>
+        <maven.deploy-plugin.version>2.8.2</maven.deploy-plugin.version>
+
+        <grpc.kotlin.version>1.4.3</grpc.kotlin.version>
+        <java.grpc.version>1.66.0</java.grpc.version>
+        <protobuf.version>4.31.1</protobuf.version>
+        <protoc.version>31.1</protoc.version>
+        <protobuf.java.version>4.31.1</protobuf.java.version>
+    </properties>
+
+    <distributionManagement>
+        <repository>
+            <id>internal.repo</id>
+            <name>Temporary Staging Repository</name>
+            <url>file://${deploy.temporary.artifact.dir</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </distributionManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>kr.motd.maven</groupId>
+                <artifactId>os-maven-plugin</artifactId>
+                <version>1.7.0</version> <!-- consider handling this version via properties as well -->
+                <executions>
+                    <execution>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>detect</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.xolstice.maven.plugins</groupId>
+                <artifactId>protobuf-maven-plugin</artifactId>
+                <version>0.6.1</version>
+                <executions>
+                    <execution>
+                        <id>compile</id>
+                        <goals>
+                            <goal>compile</goal>
+                            <goal>compile-custom</goal>
+                        </goals>
+                        <configuration>
+                            <protocArtifact>com.google.protobuf:protoc:${protoc.version}:exe:${os.detected.classifier}</protocArtifact>
+                            <pluginId>grpc-java</pluginId>
+                            <pluginArtifact>io.grpc:protoc-gen-grpc-java:${java.grpc.version}:exe:${os.detected.classifier}</pluginArtifact>
+                            <protocPlugins>
+                                <protocPlugin>
+                                    <id>grpc-kotlin</id>
+                                    <groupId>io.grpc</groupId>
+                                    <artifactId>protoc-gen-grpc-kotlin</artifactId>
+                                    <version>${grpc.kotlin.version}</version>
+                                    <classifier>jdk8</classifier>
+                                    <mainClass>io.grpc.kotlin.generator.GeneratorRunner</mainClass>
+                                </protocPlugin>
+                            </protocPlugins>
+                            <protoSourceRoot>${project.basedir}/src/main/proto</protoSourceRoot>
+                            <attachProtoSources>true</attachProtoSources>
+                            <additionalProtoPathElements>${project.basedir}/protoc/include</additionalProtoPathElements>
+                            <protocExecutable>${project.basedir}/protoc/bin/protoc</protocExecutable>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>compile-kt</id>
+                        <goals>
+                            <goal>compile-custom</goal>
+                        </goals>
+                        <configuration>
+                            <protocArtifact>com.google.protobuf:protoc:${protoc.version}:exe:${os.detected.classifier}</protocArtifact>
+                            <outputDirectory>${project.build.directory}/generated-sources/protobuf/kotlin</outputDirectory>
+                            <pluginId>kotlin</pluginId>
+                            <attachProtoSources>true</attachProtoSources>
+                            <additionalProtoPathElements>${project.basedir}/protoc/include</additionalProtoPathElements>
+                            <protocExecutable>${project.basedir}/protoc/bin/protoc</protocExecutable>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>com.github.github</groupId>
+                <artifactId>site-maven-plugin</artifactId>
+                <version>${maven.site-plugin.version}</version>
+                <configuration>
+                    <message>${project.groupId}:${project.artifactId}:${project.version}</message>
+                    <noJekyll>true</noJekyll>
+                    <outputDirectory>${deploy.temporaryArtifactDir}</outputDirectory>
+                    <branch>refs/heads/${deploy.branch.name}</branch>
+                    <includes>
+                        <include>*/**</include>
+                    </includes>
+                    <excludes>
+                        <exclude>demo-app/**</exclude>
+                        <exclude>**/demo-app/**</exclude>
+                    </excludes>
+                    <merge>true</merge>
+                    <repositoryName>${deploy.repository.name}</repositoryName>
+                    <repositoryOwner>${deploy.repository.owner}</repositoryOwner>
+                    <server>github</server>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>site</goal>
+                        </goals>
+                        <phase>deploy</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>${maven.source-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>${maven.deploy-plugin.version}</version>
+                <configuration>
+                    <altDeploymentRepository>
+                        internal.repo::default::file://${deploy.temporaryArtifactDir}
+                    </altDeploymentRepository>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-kotlin-stub</artifactId>
+            <version>${grpc.kotlin.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-protobuf</artifactId>
+            <version>${java.grpc.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-kotlin</artifactId>
+            <version>${protobuf.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>${protobuf.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java-util</artifactId>
+            <version>${protobuf.version}</version>
+        </dependency>
+    </dependencies>
+</project>
